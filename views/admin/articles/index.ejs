@@ -28,6 +28,7 @@
                         <form method="POST" action="/articles/delete" style='display: inline' onsubmit="confirmarDelecao(event, this)">
                         <input type="hidden" name="id" value='<%- article.id %>'>
                         <button class="btn btn-danger">Deletar</button>
+                        <a href="/admin/articles/edit/<%- article.id %>" class="btn btn-primary">Editar</a>
                     </form>
                     </td>
                 </tr>

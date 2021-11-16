@@ -7,12 +7,16 @@ const slugify = require('slugify')
 
 //modles
 const Category = require('./Category.js')
+const Article = require('../articles/Article')
 
-router.get('/admin/categories/new', (req, res) => {
+//middleware
+const adminAuth = require('../middlewares/adminAuth.js')
+
+router.get('/admin/categories/new', adminAuth, (req, res) => {
     res.render('admin/categories/new.ejs')
 })
 
-router.post('/categories/save', (req, res) => {
+router.post('/categories/save', adminAuth, (req, res) => {
     var title = req.body.title
     if(title != undefined){
         Category.create({
@@ -26,7 +30,7 @@ router.post('/categories/save', (req, res) => {
     }
 })
 
-router.get('/admin/categories', (req, res) => {
+router.get('/admin/categories', adminAuth,(req, res) => {
 
     Category.findAll().then((categories) => {
         res.render('admin/categories/index.ejs', {categories: categories})
@@ -36,7 +40,7 @@ router.get('/admin/categories', (req, res) => {
 
 
 //deletar
-router.post('/categories/delete', (req, res) => {
+router.post('/categories/delete', adminAuth,(req, res) => {
     var id = req.body.id
     if(id != undefined){
 
@@ -55,7 +59,7 @@ router.post('/categories/delete', (req, res) => {
 })
 
 //editar
-router.get('/admin/categories/edit/:id', (req, res) => {
+router.get('/admin/categories/edit/:id',adminAuth, (req, res) => {
     var id = req.params.id
 
     if(isNaN(id)){
@@ -76,7 +80,7 @@ router.get('/admin/categories/edit/:id', (req, res) => {
 })
 
 
-router.post('/categories/update', (req, res) => {
+router.post('/categories/update', adminAuth,(req, res) => {
     var id = req.body.id
     var title = req.body.title
 
@@ -84,5 +88,31 @@ router.post('/categories/update', (req, res) => {
         res.redirect('/admin/categories')
     })
 })
+
+//uma rota que pega o paramento pela url e busca no banco de dados todos os articos nessa categoria
+router.get('/categories/:slug', (req, res) => {
+    var slug = req.params.slug
+
+    Category.findOne({
+        where: {slug: slug}
+    }).then((category) => {
+        if(category != undefined){
+            Article.findAll({
+                where: {categoryId: category.id},
+                order: [
+                    ['id', 'DESC']
+                ]
+            }).then((articles) => {
+                Category.findAll().then((categories) => {
+                    res.render('admin/articles/view', {articles: articles, categories: categories})
+                })
+            })
+        }else{
+            res.redirect('/')
+        }
+    })
+})
+
+module.exports = router
 
 module.exports = router
